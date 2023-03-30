@@ -1,0 +1,14 @@
+.vs
+/**/log/*
+*.aps
+*.cache
+*.eto
+*.suo
+*.user
+*.sln
+packages
+/**/bin/*
+/**/obj/*
+/**/coveragereport/*
+/**/TestResults/*
+/Release/*
