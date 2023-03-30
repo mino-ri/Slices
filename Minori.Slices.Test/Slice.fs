@@ -242,7 +242,9 @@ module Equals =
     let 要素の中身が違うと等しくない1 () = test testFunc1 (Slice.ofArray [| 'a' |], Slice.ofArray [| 'b' |]) ==> Assert.isFalse
 
     [<Fact>]
-    let 要素の中身が違うと等しくない2 () = test testFunc1 (Slice.ofArray [| 'a'; 'b' |], Slice.ofArray [| 'a'; 'c' |]) ==> Assert.isFalse
+    let 要素の中身が違うと等しくない2 () =
+        test testFunc1 (Slice.ofArray [| 'a'; 'b' |], Slice.ofArray [| 'a'; 'c' |])
+        ==> Assert.isFalse
 
     [<Fact>]
     let 別の型と等しくない () = test testFunc2 (Slice.ofSeq "abc", "abc") ==> Assert.isFalse

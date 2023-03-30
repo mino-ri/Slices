@@ -8,16 +8,19 @@ open System.Diagnostics.CodeAnalysis
 // ============================== exception utility ==============================
 
 [<ExcludeFromCodeCoverage>]
-let private raiseNotFound () = raise (KeyNotFoundException("An value satisfying the predicate was not found in the collection."))
+let private raiseNotFound () =
+    raise (KeyNotFoundException("An value satisfying the predicate was not found in the collection."))
 
 [<ExcludeFromCodeCoverage>]
 let private raiseEmpty (paramName: string) = invalidArg paramName "The input sequence was empty."
 
 [<ExcludeFromCodeCoverage>]
-let private raiseNeedMoreElement (paramName: string) = invalidArg paramName "The input sequence must contain two or more elements."
+let private raiseNeedMoreElement (paramName: string) =
+    invalidArg paramName "The input sequence must contain two or more elements."
 
 [<ExcludeFromCodeCoverage>]
-let private raiseMoreThanOneElement (paramName: string) = invalidArg paramName "The input sequence contains more than one element."
+let private raiseMoreThanOneElement (paramName: string) =
+    invalidArg paramName "The input sequence contains more than one element."
 
 // ============================== internal utility ==============================
 
@@ -255,7 +258,12 @@ let inline private freeMap length (source: 'T slice) ([<InlineIfLambda>] mapping
 type private FreeMapping2<'T1, 'T2, 'U> = delegate of int * ReadOnlySpan<'T1> * ReadOnlySpan<'T2> -> 'U
 
 [<ExcludeFromCodeCoverage>]
-let inline private freeMap2 length (source1: 'T1 slice) (source2: 'T2 slice) ([<InlineIfLambda>] mapping: FreeMapping2<'T1, 'T2, 'U>) =
+let inline private freeMap2
+    length
+    (source1: 'T1 slice)
+    (source2: 'T2 slice)
+    ([<InlineIfLambda>] mapping: FreeMapping2<'T1, 'T2, 'U>)
+    =
     let result = zeroCreate<'U> length
     let span1 = source1.AsSpan()
     let span2 = source2.AsSpan()
@@ -264,7 +272,8 @@ let inline private freeMap2 length (source1: 'T1 slice) (source2: 'T2 slice) ([<
         resultSpan[i] <- mapping.Invoke(i, span1, span2)
     result
 
-type private FreeMapping3<'T1, 'T2, 'T3, 'U> = delegate of int * ReadOnlySpan<'T1> * ReadOnlySpan<'T2> * ReadOnlySpan<'T3> -> 'U
+type private FreeMapping3<'T1, 'T2, 'T3, 'U> =
+    delegate of int * ReadOnlySpan<'T1> * ReadOnlySpan<'T2> * ReadOnlySpan<'T3> -> 'U
 
 [<ExcludeFromCodeCoverage>]
 let inline private freeMap3
@@ -334,7 +343,8 @@ let vAllPairs (slice1: 'T1 slice) (slice2: 'T2 slice) : struct ('T1 * 'T2) slice
 
 let indexed (slice: 'T slice) : (int * 'T) slice = freeMap slice.Length slice (FreeMapping(fun i span -> (i, span[i])))
 
-let vIndexed (slice: 'T slice) : struct (int * 'T) slice = freeMap slice.Length slice (FreeMapping(fun i span -> (i, span[i])))
+let vIndexed (slice: 'T slice) : struct (int * 'T) slice =
+    freeMap slice.Length slice (FreeMapping(fun i span -> (i, span[i])))
 
 let unzip (slice: ('T1 * 'T2) slice) : 'T1 slice * 'T2 slice =
     let result1 = zeroCreate<'T1> slice.Length
@@ -611,7 +621,11 @@ let mapFold (folder: 'State -> 'T -> 'Result * 'State) (state: 'State) (slice: '
             acc <- a
         result, acc
 
-let vMapFold (folder: 'State -> 'T -> struct ('Result * 'State)) (state: 'State) (slice: 'T slice) : struct ('Result slice * 'State) =
+let vMapFold
+    (folder: 'State -> 'T -> struct ('Result * 'State))
+    (state: 'State)
+    (slice: 'T slice)
+    : struct ('Result slice * 'State) =
     if isEmpty slice then
         empty, state
     else
@@ -641,7 +655,11 @@ let mapFoldBack (folder: 'T -> 'State -> 'Result * 'State) (slice: 'T slice) (st
             acc <- a
         result, acc
 
-let vMapFoldBack (folder: 'T -> 'State -> struct ('Result * 'State)) (slice: 'T slice) (state: 'State) : struct ('Result slice * 'State) =
+let vMapFoldBack
+    (folder: 'T -> 'State -> struct ('Result * 'State))
+    (slice: 'T slice)
+    (state: 'State)
+    : struct ('Result slice * 'State) =
     if isEmpty slice then
         empty, state
     else
@@ -971,7 +989,8 @@ let sortWith (comparer: 'T -> 'T -> int) (slice: 'T slice) : 'T slice =
 
 let sort (slice: 'T slice) : 'T slice = sortWith compare slice
 
-let sortBy (projection: 'T -> 'Key) (slice: 'T slice) : 'T slice = sortWith (fun x y -> compare (projection x) (projection y)) slice
+let sortBy (projection: 'T -> 'Key) (slice: 'T slice) : 'T slice =
+    sortWith (fun x y -> compare (projection x) (projection y)) slice
 
 let sortDescending (slice: 'T slice) : 'T slice = sortWith (fun x y -> -compare x y) slice
 
@@ -991,7 +1010,10 @@ let permute (indexMap: int -> int) (slice: 'T slice) : 'T slice =
 // ============================== updatings ==============================
 
 let insertAt index (value: 'T) (source: 'T slice) : 'T slice =
-    create<'T> (source.Length + 1) |> addSlice source[..index] |> add value |> addSlice source[index..]
+    create<'T> (source.Length + 1)
+    |> addSlice source[..index]
+    |> add value
+    |> addSlice source[index..]
 
 let insertSliceAt index (values: 'T slice) (source: 'T slice) : 'T slice =
     create<'T> (source.Length + values.Length)
@@ -1000,9 +1022,13 @@ let insertSliceAt index (values: 'T slice) (source: 'T slice) : 'T slice =
     |> addSlice source[index..]
 
 let insertManyAt index (values: seq<'T>) (source: 'T slice) : 'T slice =
-    create<'T> source.Length |> addSlice source[..index] |> addRange values |> addSlice source[index..]
+    create<'T> source.Length
+    |> addSlice source[..index]
+    |> addRange values
+    |> addSlice source[index..]
 
-let removeAt index (source: 'T slice) : 'T slice = create<'T> source.Length |> addSlice source[..index] |> addSlice source[index + 1 ..]
+let removeAt index (source: 'T slice) : 'T slice =
+    create<'T> source.Length |> addSlice source[..index] |> addSlice source[index + 1 ..]
 
 let removeManyAt index count (source: 'T slice) : 'T slice =
     create<'T> source.Length |> addSlice source[..index] |> addSlice source[index + count ..]

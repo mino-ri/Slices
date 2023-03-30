@@ -85,7 +85,8 @@ module append =
     let 正常 () = testing {
         let! slice1 = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
         let! slice2 = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
-        test Slice.append (slice1, slice2) ==> Assert.sequentialEqual (Seq.append slice1 slice2)
+        let expected = Seq.append slice1 slice2
+        test Slice.append (slice1, slice2) ==> Assert.sequentialEqual expected
     }
 
     [<Fact>]
@@ -121,7 +122,8 @@ module choose =
     [<Fact>]
     let 正常 () = testing {
         let! slice = ArgGen.slice (ArgGen.int) (ArgGen.intRange 0 16)
-        test Slice.vChoose (chooser, slice) ==> Assert.sequentialEqual (Seq.choose chooser2 slice)
+        let expected = Seq.choose chooser2 slice
+        test Slice.vChoose (chooser, slice) ==> Assert.sequentialEqual expected
     }
 
     [<Fact>]
@@ -238,7 +240,8 @@ module distinctBy =
     [<Fact>]
     let 正常 () = testing {
         let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
-        test Slice.distinctBy (int, slice) ==> Assert.sequentialEqual (Seq.distinctBy int slice)
+        let expected = Seq.distinctBy int slice
+        test Slice.distinctBy (int, slice) ==> Assert.sequentialEqual expected
     }
 
     [<Fact>]
@@ -341,7 +344,8 @@ module tryFind =
     let 正常 () = testing {
         let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
         let! index = ArgGen.intRange 0 slice.Length
-        test Slice.vTryFind ((Mock.trueWhen<char> index), slice) ==> Assert.equal (ValueSome(slice[index]))
+        test Slice.vTryFind ((Mock.trueWhen<char> index), slice)
+        ==> Assert.equal (ValueSome(slice[index]))
     }
 
     [<Fact>]
@@ -407,7 +411,9 @@ module findIndex =
     }
 
     [<Fact>]
-    let Empty () = test Slice.findIndex ((fun _ -> true), Slice.empty) ==> Assert.thrown<KeyNotFoundException>
+    let Empty () =
+        test Slice.findIndex ((fun _ -> true), Slice.empty)
+        ==> Assert.thrown<KeyNotFoundException>
 
 
 module tryFindIndex =
@@ -415,7 +421,8 @@ module tryFindIndex =
     let 正常 () = testing {
         let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
         let! index = ArgGen.intRange 0 slice.Length
-        test Slice.vTryFindIndex ((Mock.trueWhen<char> index), slice) ==> Assert.equal (ValueSome(index))
+        test Slice.vTryFindIndex ((Mock.trueWhen<char> index), slice)
+        ==> Assert.equal (ValueSome(index))
     }
 
     [<Fact>]
@@ -444,7 +451,9 @@ module findIndexBack =
     }
 
     [<Fact>]
-    let Empty () = test Slice.findIndexBack ((fun _ -> true), Slice.empty) ==> Assert.thrown<KeyNotFoundException>
+    let Empty () =
+        test Slice.findIndexBack ((fun _ -> true), Slice.empty)
+        ==> Assert.thrown<KeyNotFoundException>
 
 
 module tryFindIndexBack =
@@ -453,7 +462,8 @@ module tryFindIndexBack =
         let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
         let! index = ArgGen.intRange 0 slice.Length
         let expected = ValueSome(slice.Length - index - 1)
-        test Slice.vTryFindIndexBack ((Mock.trueWhen<char> index), slice) ==> Assert.equal expected
+        test Slice.vTryFindIndexBack ((Mock.trueWhen<char> index), slice)
+        ==> Assert.equal expected
     }
 
     [<Fact>]
@@ -567,7 +577,10 @@ module groupBy =
     let 正常 () = testing {
         let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
         let expected =
-            slice |> Seq.groupBy id |> Seq.map (fun (x, y) -> struct (x, Slice.ofSeq y)) |> Seq.toArray
+            slice
+            |> Seq.groupBy id
+            |> Seq.map (fun (x, y) -> struct (x, Slice.ofSeq y))
+            |> Seq.toArray
         test Slice.vGroupBy (id, slice) ==> Assert.sequentialEqual expected
     }
 
@@ -895,7 +908,9 @@ module vPartition =
         Assert.sequentialEqual expected2 actual2
     }
 
-    let Empty () = test Slice.vPartition (((<) 0), Slice.empty) ==> Assert.equal (struct (Slice.empty, Slice.empty))
+    let Empty () =
+        test Slice.vPartition (((<) 0), Slice.empty)
+        ==> Assert.equal (struct (Slice.empty, Slice.empty))
 
 
 module permute =
@@ -903,7 +918,8 @@ module permute =
     let 正常 () = testing {
         let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 1 16)
         let expected = Array.permute (fun x -> (x + 1) % slice.Length) (Array.ofSeq slice)
-        test Slice.permute ((fun x -> (x + 1) % slice.Length), slice) ==> Assert.sequentialEqual expected
+        test Slice.permute ((fun x -> (x + 1) % slice.Length), slice)
+        ==> Assert.sequentialEqual expected
     }
 
     let Empty () = test Slice.permute (id, Slice.empty) ==> Assert.equal Slice.empty

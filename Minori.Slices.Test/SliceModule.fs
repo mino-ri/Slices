@@ -148,7 +148,8 @@ module addSlice =
     let 正常 () = testing {
         let! slice1 = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
         let! slice2 = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 0 16)
-        test Slice.addSlice (slice2, slice1) ==> Assert.sequentialEqual (Seq.append slice1 slice2)
+        let expected = Seq.append slice1 slice2
+        test Slice.addSlice (slice2, slice1) ==> Assert.sequentialEqual expected
     }
 
     [<Fact>]
