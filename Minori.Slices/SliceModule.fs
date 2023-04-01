@@ -145,6 +145,52 @@ let iteri2 (action: int -> 'T1 -> 'T2 -> unit) (slice1: 'T1 slice) (slice2: 'T2 
         for i in 0 .. length - 1 do
             f.Invoke(i, span1[i], span2[i])
 
+[<return: Struct>]
+let (|Cons|_|) (slice: 'T1 slice) =
+    if slice.Length < 1 then
+        ValueNone
+    else
+        ValueSome struct (slice[0], slice[1..])
+
+[<return: Struct>]
+let (|Cons2|_|) (slice: 'T1 slice) =
+    if slice.Length < 2 then
+        ValueNone
+    else
+        ValueSome struct (slice[0], slice[1], slice[2..])
+
+[<return: Struct>]
+let (|Cons3|_|) (slice: 'T1 slice) =
+    if slice.Length < 3 then
+        ValueNone
+    else
+        ValueSome struct (slice[0], slice[1], slice[2], slice[3..])
+
+[<return: Struct>]
+let (|ConsBack|_|) (slice: 'T1 slice) =
+    if slice.Length < 1 then
+        ValueNone
+    else
+        ValueSome struct (slice[.. slice.Length - 1], slice[slice.Length - 1])
+
+[<return: Struct>]
+let (|ConsBack2|_|) (slice: 'T1 slice) =
+    if slice.Length < 2 then
+        ValueNone
+    else
+        ValueSome struct (slice[.. slice.Length - 2], slice[slice.Length - 2], slice[slice.Length - 1])
+
+[<return: Struct>]
+let (|ConsBack3|_|) (slice: 'T1 slice) =
+    if slice.Length < 3 then
+        ValueNone
+    else
+        ValueSome
+            struct (slice[.. slice.Length - 3],
+                    slice[slice.Length - 3],
+                    slice[slice.Length - 2],
+                    slice[slice.Length - 1])
+
 // ============================== creators & initializers ==============================
 
 let private zeroCreate<'T> length =
@@ -170,7 +216,11 @@ let init length (initializer: int -> 'T) : 'T slice =
 [<ExcludeFromCodeCoverage>]
 let inline empty<'T> : 'T slice = Slice<'T>()
 
-let create<'T> capacity : 'T slice = Slice<'T>(SliceBack.alloc capacity, 0, 0)
+let create<'T> capacity : 'T slice =
+    if capacity <= 0 then
+        empty
+    else
+        Slice<'T>(SliceBack.alloc capacity, 0, 0)
 
 let singleton value : 'T slice =
     let result = zeroCreate 1
@@ -228,19 +278,20 @@ let inline private vOfDict<'Key, 'Value> (dict: Dictionary<'Key, 'Value>) =
         i <- i + 1
     result
 
+[<ExcludeFromCodeCoverage>]
 let ofSpan<'T> (span: ReadOnlySpan<'T>) : 'T slice = addSpan span (create span.Length)
 
+[<ExcludeFromCodeCoverage>]
 let ofArray<'T> (array: 'T[]) : 'T slice = create array.Length |> addSpan (ReadOnlySpan(array))
 
-// インライン化されるためカバレッジ対象外 (テストはある)
 [<ExcludeFromCodeCoverage>]
 let ofSeq<'T> (items: seq<'T>) = addRange items empty
 
 [<ExcludeFromCodeCoverage>]
-let inline toArray (slice: 'T slice) = slice.AsSpan().ToArray()
+let inline toArray<'T> (slice: 'T slice) = slice.AsSpan().ToArray()
 
 [<ExcludeFromCodeCoverage>]
-let inline toSeq (slice: 'T slice) = Seq.readonly slice
+let inline toSeq<'T> (slice: 'T slice) = Seq.readonly slice
 
 // ============================== mappings ==============================
 
@@ -415,17 +466,17 @@ let vZip (slice1: 'T1 slice) (slice2: 'T2 slice) : struct ('T1 * 'T2) slice =
         freeMap2 length slice1 slice2 (FreeMapping2(fun i span1 span2 -> span1[i], span2[i]))
 
 let zip3 (slice1: 'T1 slice) (slice2: 'T2 slice) (slice3: 'T3 slice) : ('T1 * 'T2 * 'T3) slice =
-    if isEmpty slice1 || isEmpty slice2 then
+    if isEmpty slice1 || isEmpty slice2 || isEmpty slice3 then
         empty
     else
-        let length = Operators.min slice1.Length slice2.Length
+        let length = Operators.min slice1.Length slice2.Length |> Operators.min slice3.Length
         freeMap3 length slice1 slice2 slice3 (FreeMapping3(fun i span1 span2 span3 -> span1[i], span2[i], span3[i]))
 
 let vZip3 (slice1: 'T1 slice) (slice2: 'T2 slice) (slice3: 'T3 slice) : struct ('T1 * 'T2 * 'T3) slice =
-    if isEmpty slice1 || isEmpty slice2 then
+    if isEmpty slice1 || isEmpty slice2 || isEmpty slice3 then
         empty
     else
-        let length = Operators.min slice1.Length slice2.Length
+        let length = Operators.min slice1.Length slice2.Length |> Operators.min slice3.Length
         freeMap3 length slice1 slice2 slice3 (FreeMapping3(fun i span1 span2 span3 -> span1[i], span2[i], span3[i]))
 
 // ============================== filterings ==============================
@@ -468,14 +519,14 @@ let inline take count (slice: 'T slice) : 'T slice = slice[..count]
 [<ExcludeFromCodeCoverage>]
 let inline truncate count (slice: 'T slice) : 'T slice = slice[..count]
 
-let takeWhihe (predicate: 'T -> bool) (slice: 'T slice) : 'T slice =
+let takeWhile (predicate: 'T -> bool) (slice: 'T slice) : 'T slice =
     let mutable index = 0
     let span = slice.AsSpan()
     while index < span.Length && predicate span[index] do
         index <- index + 1
     slice[..index]
 
-let skipWhihe (predicate: 'T -> bool) (slice: 'T slice) : 'T slice =
+let skipWhile (predicate: 'T -> bool) (slice: 'T slice) : 'T slice =
     let mutable index = 0
     let span = slice.AsSpan()
     while index < span.Length && predicate span[index] do
@@ -512,7 +563,7 @@ let vSplitAt index (slice: 'T slice) : struct ('T slice * 'T slice) = slice[..in
 // ============================== concats ==============================
 
 [<ExcludeFromCodeCoverage>]
-let append (slice1: 'T slice) (slice2: 'T slice) : 'T slice = addSpan (slice2.AsSpan()) slice1
+let inline append (slice1: 'T slice) (slice2: 'T slice) : 'T slice = addSpan (slice2.AsSpan()) slice1
 
 let collect (mapping: 'T -> 'U slice) (slice: 'T slice) : 'U slice =
     let mutable result = createDefaultCap<'U> slice.Length
@@ -585,10 +636,11 @@ let scan (folder: 'State -> 'T -> 'State) (state: 'State) (slice: 'T slice) : 'S
         let f = OptimizedClosures.FSharpFunc<_, _, _>.Adapt(folder)
         let mutable acc = state
         freeMap
-            slice.Length
+            (slice.Length + 1)
             slice
             (FreeMapping(fun i span ->
-                acc <- f.Invoke(acc, span[i])
+                if i > 0 then
+                    acc <- f.Invoke(acc, span[i - 1])
                 acc
             ))
 
@@ -728,11 +780,11 @@ let inline min (slice: 'T slice) = top (>) slice
 let inline minBy (projection: 'T -> 'U) (slice: 'T slice) = topBy projection (>) slice
 
 [<ExcludeFromCodeCoverage>]
-let inline sum (slice: 'T slice) = fold (Checked.(+)) LanguagePrimitives.GenericZero<'T> slice
+let inline sum (slice: 'T slice) = fold Checked.(+) LanguagePrimitives.GenericZero<'T> slice
 
 [<ExcludeFromCodeCoverage>]
 let inline sumBy (projection: 'T -> 'U) (slice: 'T slice) =
-    fold (fun acc x -> Checked.(+) acc (projection x)) LanguagePrimitives.GenericZero<'U> slice
+    fold (Checked.(+) >> (>>) projection) LanguagePrimitives.GenericZero<'U> slice
 
 [<ExcludeFromCodeCoverage>]
 let inline average (slice: 'T slice) =
@@ -1141,6 +1193,9 @@ let transpose (slices: seq<'T slice>) : 'T slice slice =
         // zeroCreate によって empty が代入されるため、そのまま後続処理を行ってよい
         let result = zeroCreate<'T slice> first.Length
         let resultSpan = result.AsMutableSpan()
+        let span = first.AsSpan()
+        for i = 0 to span.Length - 1 do
+            resultSpan[i] <- resultSpan[i] |> add span[i]
         while enumerator.MoveNext() do
             let current = enumerator.Current
             if current.Length <> first.Length then

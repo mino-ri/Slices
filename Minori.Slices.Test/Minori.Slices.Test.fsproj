@@ -15,7 +15,18 @@
     <Compile Include="Helpers.fs" />
     <Compile Include="Slice.fs" />
     <Compile Include="SliceModule.fs" />
-    <Compile Include="SliceCombinator.fs" />
+    <Compile Include="Creation.fs" />
+    <Compile Include="Converter.fs" />
+    <Compile Include="Mapping.fs" />
+    <Compile Include="Filtering.fs" />
+    <Compile Include="Folding.fs" />
+    <Compile Include="Concat.fs" />
+    <Compile Include="Aggregation.fs" />
+    <Compile Include="Fetching.fs" />
+    <Compile Include="Check.fs" />
+    <Compile Include="Sorting.fs" />
+    <Compile Include="Updating.fs" />
+    <Compile Include="Others.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

@@ -16,7 +16,7 @@ module Capacity =
     [<Fact>]
     let createWithCap () = testing {
         let! capacity = ArgGen.intRange -8 8
-        let expected = max 1 capacity
+        let expected = max 0 capacity
         test testFunc (Slice.create capacity) ==> Assert.equal expected
     }
 

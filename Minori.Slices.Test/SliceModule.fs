@@ -6,6 +6,15 @@ open Minori.Slices
 open Minori.Slices.Test
 open System.Collections.Generic
 
+
+module length =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        test Slice.length slice ==> Assert.equal slice.Length
+    }
+
+
 module add =
     [<Fact>]
     let Emptyに値を追加 () = testing {
@@ -156,33 +165,6 @@ module addSlice =
     let Empty () = test Slice.addSlice (Slice.empty, Slice.empty) ==> Assert.equal Slice.empty
 
 
-module ofArray =
-    [<Fact>]
-    let 正常 () = testing {
-        let! array = ArgGen.array ArgGen.asciiChar (ArgGen.intRange 0 16)
-        test Slice.ofArray<char> array ==> Assert.sequentialEqual array
-    }
-
-
-module ofSpan =
-    let testFunc (array: char[]) = Slice.ofSpan (ReadOnlySpan(array))
-
-    [<Fact>]
-    let 正常 () = testing {
-        let! array = ArgGen.array ArgGen.asciiChar (ArgGen.intRange 0 16)
-        test testFunc array ==> Assert.sequentialEqual array
-    }
-
-
-module ofSeq =
-    [<Fact>]
-    let 正常 () = testing {
-        let! array = ArgGen.array ArgGen.asciiChar (ArgGen.intRange 0 16)
-        let seq = seq { for item in array -> item }
-        test Slice.ofSeq<char> seq ==> Assert.sequentialEqual array
-    }
-
-
 module copyWithCap =
     [<Fact>]
     let 正常 () = testing {
@@ -202,4 +184,150 @@ module copy =
         let! result = test Slice.copy<char> slice
         Assert.sequentialEqual slice result
         Assert.greaterThanOrEqual slice.Capacity result.Capacity
+    }
+
+
+module iter =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let actualItems = ResizeArray()
+        let expectedItems = ResizeArray()
+        Seq.iter expectedItems.Add slice
+        do! test Slice.iter (actualItems.Add, slice)
+        Assert.sequentialEqual expectedItems actualItems
+    }
+
+
+module iteri =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let actualItems = ResizeArray()
+        let expectedItems = ResizeArray()
+        Seq.iteri (fun i x -> expectedItems.Add(i, x)) slice
+        do! test Slice.iteri ((fun i x -> actualItems.Add(i, x)), slice)
+        Assert.sequentialEqual expectedItems actualItems
+    }
+
+
+module iter2 =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice1 = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let! slice2 = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let actualItems = ResizeArray()
+        let expectedItems = ResizeArray()
+        Seq.iter2 (fun x y -> expectedItems.Add(x, y)) slice1 slice2
+        do! test Slice.iter2 ((fun x y -> actualItems.Add(x, y)), slice1, slice2)
+        Assert.sequentialEqual expectedItems actualItems
+    }
+
+
+module iteri2 =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice1 = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let! slice2 = ArgGen.slice ArgGen.int (ArgGen.intRange 0 16)
+        let actualItems = ResizeArray()
+        let expectedItems = ResizeArray()
+        Seq.iteri2 (fun i x y -> expectedItems.Add(i, x, y)) slice1 slice2
+        do! test Slice.iteri2 ((fun i x y -> actualItems.Add(i, x, y)), slice1, slice2)
+        Assert.sequentialEqual expectedItems actualItems
+    }
+
+
+module Cons =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 1 16)
+        let actual = ValueSome struct (slice[0], slice[1..])
+        test Slice.(|Cons|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.constant 0)
+        test Slice.(|Cons|_|) slice ==> Assert.vnone
+    }
+
+
+module Cons2 =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 2 16)
+        let actual = ValueSome struct (slice[0], slice[1], slice[2..])
+        test Slice.(|Cons2|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 2)
+        test Slice.(|Cons2|_|) slice ==> Assert.vnone
+    }
+
+
+module Cons3 =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 3 16)
+        let actual = ValueSome struct (slice[0], slice[1], slice[2], slice[3..])
+        test Slice.(|Cons3|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 3)
+        test Slice.(|Cons3|_|) slice ==> Assert.vnone
+    }
+
+
+module ConsBack =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 1 16)
+        let actual = ValueSome struct (slice[.. slice.Length - 1], slice[slice.Length - 1])
+        test Slice.(|ConsBack|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.constant 0)
+        test Slice.(|ConsBack|_|) slice ==> Assert.vnone
+    }
+
+
+module ConsBack2 =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 2 16)
+        let actual =
+            ValueSome struct (slice[.. slice.Length - 2], slice[slice.Length - 2], slice[slice.Length - 1])
+        test Slice.(|ConsBack2|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 2)
+        test Slice.(|ConsBack2|_|) slice ==> Assert.vnone
+    }
+
+
+module ConsBack3 =
+    [<Fact>]
+    let 一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 3 16)
+        let actual =
+            ValueSome
+                struct (slice[.. slice.Length - 3],
+                        slice[slice.Length - 3],
+                        slice[slice.Length - 2],
+                        slice[slice.Length - 1])
+        test Slice.(|ConsBack3|_|) slice ==> Assert.equal actual
+    }
+
+    [<Fact>]
+    let 不一致 () = testing {
+        let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 3)
+        test Slice.(|ConsBack3|_|) slice ==> Assert.vnone
     }
