@@ -61,23 +61,23 @@ type Slice<'T> =
         match this.Back with
         | null -> Slice()
         | _ ->
-            let start = System.Math.Clamp(start, 0, this.Length)
+            let start = Math.Clamp(start, 0, this.Length)
             Slice(this.Back, this.Start + start, this.Length - start)
 
     member this.Slice(start, length) =
         match this.Back with
         | null -> Slice()
         | _ ->
-            let start = System.Math.Clamp(start, 0, this.Length)
-            let length = System.Math.Clamp(length, 0, this.Length - start)
+            let start = Math.Clamp(start, 0, this.Length)
+            let length = Math.Clamp(length, 0, this.Length - start)
             Slice(this.Back, this.Start + start, length)
 
     member this.GetSlice(startIndex, endIndex) =
         match this.Back with
         | null -> Slice()
         | _ ->
-            let startIndex = System.Math.Clamp(defaultArg startIndex 0, 0, this.Length)
-            let endIndex = System.Math.Clamp(defaultArg endIndex this.Length, startIndex, this.Length)
+            let startIndex = Math.Clamp(defaultArg startIndex 0, 0, this.Length)
+            let endIndex = Math.Clamp(defaultArg endIndex this.Length, startIndex, this.Length)
             Slice(this.Back, this.Start + startIndex, endIndex - startIndex)
 
     [<ExcludeFromCodeCoverage>]
