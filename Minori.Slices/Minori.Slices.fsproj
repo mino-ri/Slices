@@ -4,7 +4,8 @@
     <TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <InformationalVersion>0.1.0</InformationalVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
+    <VersionPrefix>1.0.1</VersionPrefix>
     <Authors>mino-ri</Authors>
     <Copyright>© 2023 mino-ri</Copyright>
 
