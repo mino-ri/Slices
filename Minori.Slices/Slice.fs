@@ -7,21 +7,27 @@ open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open System.Collections
 
+
+/// Represents immutable memory block.
 [<Struct; CustomEquality; NoComparison>]
 type Slice<'T> =
     val internal Back: SliceBack<'T>
     val internal Start: int
+    /// Gets the length of the slice.
     val Length: int
 
     internal new(back: SliceBack<'T>, start, length) =
+        let x: int list = []
         assert (start + length <= back.Field.Length)
         { Back = back; Start = start; Length = length }
 
+    /// Gets the number of elements for which there is space allocated in the underlying array.
     member this.Capacity =
         match this.Back with
         | null -> 0
         | _ -> this.Back.Field.Length - this.Start
 
+    /// Indexes into the slice. The first element has index 0.
     member this.Item
         with get index: inref<'T> =
             if uint index >= uint this.Length then
@@ -39,12 +45,14 @@ type Slice<'T> =
         assert (uint index < uint this.Length)
         &this.Back.Field[this.Start + index]
 
+    /// Returns the Span that references the same range as this slice.
     member this.AsSpan() =
         if this.Length = 0 then
             ReadOnlySpan.Empty
         else
             ReadOnlySpan(this.Back.Field, this.Start, this.Length)
 
+    /// Returns the Memory that references the same range as this slice.
     member this.AsMemory() =
         if this.Length = 0 then
             ReadOnlyMemory.Empty
@@ -57,6 +65,7 @@ type Slice<'T> =
         else
             Span(this.Back.Field, this.Start, this.Length)
 
+    /// Returns the sub-slice. This method is for C# slicing syntax.
     member this.Slice(start) =
         match this.Back with
         | null -> Slice()
@@ -64,6 +73,7 @@ type Slice<'T> =
             let start = Math.Clamp(start, 0, this.Length)
             Slice(this.Back, this.Start + start, this.Length - start)
 
+    /// Returns the sub-slice. This method is for C# slicing syntax.
     member this.Slice(start, length) =
         match this.Back with
         | null -> Slice()
@@ -72,6 +82,7 @@ type Slice<'T> =
             let length = Math.Clamp(length, 0, this.Length - start)
             Slice(this.Back, this.Start + start, length)
 
+    /// Returns the sub-slice. This method is for F# slicing syntax.
     member this.GetSlice(startIndex, endIndex) =
         match this.Back with
         | null -> Slice()
@@ -80,11 +91,14 @@ type Slice<'T> =
             let endIndex = Math.Clamp(defaultArg endIndex this.Length, startIndex, this.Length)
             Slice(this.Back, this.Start + startIndex, endIndex - startIndex)
 
+    /// Returns a read-only reference to an object of type T that can be used for pinning.
     [<ExcludeFromCodeCoverage>]
     member this.GetPinnableReference() = this.AsSpan().GetPinnableReference()
 
+    /// Returns an enumerator.
     member this.GetEnumerator() = new SliceIterator<'T>(this.FieldOrEmpty, this.Start, this.Length)
 
+    /// Determines whether the specified slice is equal to this slice.
     member this.Equals(other: Slice<'T>) =
         if this.Length <> other.Length then
             false
@@ -111,11 +125,13 @@ type Slice<'T> =
     //             i <- i + 1
     //         equals
 
+    /// Determines whether the specified object is equal to this slice.
     override this.Equals(other: obj) =
         match other with
         | :? Slice<'T> as s -> this.Equals(s)
         | _ -> false
 
+    /// Gets the hash code for the slice.
     [<ExcludeFromCodeCoverage>]
     member private this.GetHashCode(comparer: IEqualityComparer) =
         let mutable hashCode = 0
@@ -127,6 +143,7 @@ type Slice<'T> =
                 + (hashCode >>> 2)
         hashCode
 
+    /// Gets the hash code for the slice.
     [<ExcludeFromCodeCoverage>]
     override this.GetHashCode() = this.GetHashCode(LanguagePrimitives.GenericEqualityComparer)
 
@@ -151,4 +168,5 @@ type Slice<'T> =
         member this.GetEnumerator() : IEnumerator<'T> = new SliceIteratorRef<'T>(this.GetEnumerator())
 
 
+/// Represents immutable memory block.
 type 'T slice = Slice<'T>

@@ -163,6 +163,29 @@ module transpose =
     }
 
 
+module splitInto =
+    [<Fact>]
+    let 正常 () = testing {
+        let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! count = ArgGen.intRange 1 16
+        let expected = Seq.splitInto count slice |> Helpers.toSliceSlice
+        test Slice.splitInto (count, slice) ==> Assert.sequentialEqual expected
+    }
+
+    [<Fact>]
+    let Empty () = testing {
+        let! count = ArgGen.intRange 1 16
+        test Slice.splitInto (count, Slice.empty) ==> Assert.equal Slice.empty
+    }
+
+    [<Fact>]
+    let 異常_サイズが小さすぎる () = testing {
+        let! slice = ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! count = ArgGen.intRange -16 0
+        test Slice.splitInto (count, slice) ==> Assert.thrown<ArgumentException>
+    }
+
+
 module windowed =
     [<Fact>]
     let 正常 () = testing {

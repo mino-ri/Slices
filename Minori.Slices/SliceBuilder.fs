@@ -4,6 +4,7 @@ open System
 open System.Diagnostics.CodeAnalysis
 
 
+/// Contains the 'slice' computation expression builder.
 [<ExcludeFromCodeCoverage>]
 type SliceBuilder internal () =
     member inline _.Yield(x: 'T) = fun (s: 'T slice) -> Slice.add x s
@@ -75,4 +76,5 @@ type SliceBuilder internal () =
 
 [<AutoOpen>]
 module SliceOperators =
+    /// Builds a slice using computation expression syntax.
     let slice = SliceBuilder()
