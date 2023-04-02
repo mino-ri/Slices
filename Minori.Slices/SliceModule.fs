@@ -61,6 +61,13 @@ let private extend required (slice: 'T slice) =
 
 // ============================== basic operations ==============================
 
+/// Contains dangerous operations for working with values of type slice.
+module Unchecked =
+    /// Returns a slice that references given array.
+    /// When an element of the array is changed, the element of slice is also changed.
+    /// This method breaks immutability of slice.
+    let wrapArray<'T> (array: 'T[]) : 'T slice = Slice.WrapArray(array)
+
 /// Gets the length of the slice.
 [<ExcludeFromCodeCoverage>]
 let inline length (slice: 'T slice) = slice.Length
@@ -328,6 +335,10 @@ let ofSpan<'T> (span: ReadOnlySpan<'T>) : 'T slice = addSpan span (create span.L
 [<ExcludeFromCodeCoverage>]
 let ofArray<'T> (array: 'T[]) : 'T slice = create array.Length |> addSpan (ReadOnlySpan(array))
 
+/// Builds a new slice from the given list.
+[<ExcludeFromCodeCoverage>]
+let ofList<'T> (list: 'T list) : 'T slice = create list.Length |> addRange list
+
 /// Builds a new slice from the given enumerable object.
 [<ExcludeFromCodeCoverage>]
 let ofSeq<'T> (items: seq<'T>) = addRange items empty
@@ -336,9 +347,21 @@ let ofSeq<'T> (items: seq<'T>) = addRange items empty
 [<ExcludeFromCodeCoverage>]
 let inline toArray<'T> (slice: 'T slice) = slice.AsSpan().ToArray()
 
+/// Builds a new list from the given slice.
+[<ExcludeFromCodeCoverage>]
+let toList<'T> (slice: 'T slice) = List.init slice.Length (fun i -> slice[i])
+
 /// Views the given slice as a sequence.
 [<ExcludeFromCodeCoverage>]
 let inline toSeq<'T> (slice: 'T slice) = Seq.readonly slice
+
+/// Returns the Span that references the same range as given slice.
+[<ExcludeFromCodeCoverage>]
+let inline asSpan<'T> (slice: 'T slice) = slice.AsSpan()
+
+/// Returns the Memory that references the same range as given slice.
+[<ExcludeFromCodeCoverage>]
+let inline asMemory<'T> (slice: 'T slice) = slice.AsMemory()
 
 // ============================== mappings ==============================
 

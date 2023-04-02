@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://github.com/mino-ri/Slices</PackageProjectUrl>
     <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>test</PackageTags>
+    <PackageTags>F# fsharp slice collections</PackageTags>
     <IsPackable>true</IsPackable>
     <PackageId>$(AssemblyName)</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -6,9 +6,15 @@ open System
 open System.Collections.Generic
 open System.Diagnostics.CodeAnalysis
 open System.Collections
-
+#if NET5_0_OR_GREATER
+open System.Text.Json
+open System.Text.Json.Serialization
+#endif
 
 /// Represents immutable memory block.
+#if NET5_0_OR_GREATER
+[<JsonConverter(typeof<SliceJsonConverterFactory>)>]
+#endif
 [<Struct; CustomEquality; NoComparison>]
 type Slice<'T> =
     val internal Back: SliceBack<'T>
@@ -39,6 +45,13 @@ type Slice<'T> =
         match this.Back with
         | null -> array.Empty()
         | _ -> this.Back.Field
+
+    [<ExcludeFromCodeCoverage>]
+    static member internal WrapArray(source: 'T[]) =
+        if source.Length = 0 then
+            Slice()
+        else
+            Slice(SliceBack(source, source.Length), 0, source.Length)
 
     [<ExcludeFromCodeCoverage>]
     member inline internal this.ForSet(index) : byref<'T> =
@@ -131,7 +144,6 @@ type Slice<'T> =
         | :? Slice<'T> as s -> this.Equals(s)
         | _ -> false
 
-    /// Gets the hash code for the slice.
     [<ExcludeFromCodeCoverage>]
     member private this.GetHashCode(comparer: IEqualityComparer) =
         let mutable hashCode = 0
@@ -166,6 +178,46 @@ type Slice<'T> =
             with get index = this[index]
         member this.GetEnumerator() : Collections.IEnumerator = new SliceIteratorRef<'T>(this.GetEnumerator())
         member this.GetEnumerator() : IEnumerator<'T> = new SliceIteratorRef<'T>(this.GetEnumerator())
+
+#if NET5_0_OR_GREATER
+and internal SliceJsonConverter<'T>() =
+    inherit JsonConverter<Slice<'T>>()
+
+    override _.Read(reader, _, options) = Slice.WrapArray(JsonSerializer.Deserialize<'T[]>(&reader, options))
+
+    override _.Write(writer, value, options) =
+        writer.WriteStartArray()
+        for x in value do
+            JsonSerializer.Serialize(writer, x, options)
+        writer.WriteEndArray()
+
+
+and internal ByteSliceJsonConverter() =
+    inherit JsonConverter<Slice<byte>>()
+    override _.Read(reader, _, _) = Slice.WrapArray(reader.GetBytesFromBase64())
+
+    override _.Write(writer, value, _) = writer.WriteBase64StringValue(value.AsSpan())
+
+
+/// Provides JsonConverter for slices.
+and SliceJsonConverterFactory() =
+    inherit JsonConverterFactory()
+    let genericType = typedefof<Slice<_>>
+    let byteSliceType = typeof<Slice<byte>>
+    let converterType = typedefof<SliceJsonConverter<_>>
+
+    /// <inheritdoc />
+    override _.CanConvert(typeToConvet) =
+        typeToConvet.IsGenericType && typeToConvet.GetGenericTypeDefinition() = genericType
+
+    /// <inheritdoc />
+    override _.CreateConverter(typeToConvet, _) =
+        if typeToConvet = byteSliceType then
+            ByteSliceJsonConverter()
+        else
+            let elementType = typeToConvet.GetGenericArguments()[0]
+            Activator.CreateInstance(converterType.MakeGenericType(elementType)) :?> JsonConverter
+#endif
 
 
 /// Represents immutable memory block.

@@ -2,6 +2,7 @@ namespace Minori.Slices.Test.Slice
 
 open System
 open System.Collections.Generic
+open System.Text.Json
 open Testexp
 open Minori.Slices
 open Minori.Slices.Test
@@ -248,3 +249,41 @@ module Equals =
 
     [<Fact>]
     let 別の型と等しくない () = test testFunc2 (Slice.ofSeq "abc", "abc") ==> Assert.isFalse
+
+
+module JsonSerialize =
+    let testFunc<'T> (value: 'T) = JsonSerializer.Serialize(value)
+
+    [<Fact>]
+    let 配列とシリアライズ結果が同じ () = testing {
+        let! array = ArgGen.array ArgGen.int (ArgGen.intRange 0 16)
+        let slice = Slice.ofArray array
+        let expected = testFunc array
+        test testFunc slice ==> Assert.equal expected
+    }
+
+    [<Fact>]
+    let Byte配列がBase64になる () = testing {
+        let! array = ArgGen.array ArgGen.byte (ArgGen.intRange 0 16)
+        let slice = Slice.ofArray array
+        let expected = testFunc array
+        test testFunc slice ==> Assert.equal expected
+    }
+
+
+module JsonDeserialize =
+    let testFunc<'T> (json: string) : 'T = JsonSerializer.Deserialize(json)
+
+    [<Fact>]
+    let 配列のシリアライズ結果からデシリアライズできる () = testing {
+        let! array = ArgGen.array ArgGen.int (ArgGen.intRange 0 16)
+        let json = JsonSerializer.Serialize(array)
+        test testFunc<int slice> json ==> Assert.sequentialEqual array
+    }
+
+    [<Fact>]
+    let Byte配列のシリアライズ結果からデシリアライズできる () = testing {
+        let! array = ArgGen.array ArgGen.byte (ArgGen.intRange 0 16)
+        let json = JsonSerializer.Serialize(array)
+        test testFunc<byte slice> json ==> Assert.sequentialEqual array
+    }
