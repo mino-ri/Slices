@@ -1,10 +1,10 @@
 namespace Minori.Slices.Test.Slice
 
 open System
+open System.Collections.Generic
 open Testexp
 open Minori.Slices
 open Minori.Slices.Test
-open System.Collections.Generic
 
 
 module Capacity =

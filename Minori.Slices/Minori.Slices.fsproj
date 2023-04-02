@@ -22,6 +22,7 @@
     <Compile Include="SliceIterator.fs" />
     <Compile Include="Slice.fs" />
     <Compile Include="SliceModule.fs" />
+    <Compile Include="SliceBuilder.fs" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">

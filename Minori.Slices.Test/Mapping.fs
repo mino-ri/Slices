@@ -1,6 +1,5 @@
 namespace Minori.Slices.Test.Slice
 
-open System
 open Testexp
 open Minori.Slices
 open Minori.Slices.Test

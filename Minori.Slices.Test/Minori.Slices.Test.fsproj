@@ -27,6 +27,7 @@
     <Compile Include="Sorting.fs" />
     <Compile Include="Updating.fs" />
     <Compile Include="Others.fs" />
+    <Compile Include="SliceBuilder.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
