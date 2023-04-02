@@ -2,6 +2,14 @@
 
 Immutable memory block for F#
 
+## Installation
+
+[NuGet](https://www.nuget.org/packages/Minori.Slices/)
+
+```
+dotnet add package Minori.Slices
+```
+
 ## Introduction
 
 `Slice` is an immutable memory block like the `ReadOnlyMemory<'T>` but more useful as a collection.
@@ -34,7 +42,7 @@ let s1 = Slice.create 5                           // { }
 let s2 = s1 |> Slice.add 'a'                      // { 'a' }
 let s3 = s2 |> Slice.addRange [| 'b'; 'c' |]      // { 'a'; 'b'; 'c' }
 let s4 = s3 |> Slice.addRange [| 'd'; 'e'; 'f' |] // { 'a'; 'b'; 'c'; 'd'; 'e'; 'f' }
-let s5 = s1 |> Slice.add '%'                      // { 'a'; '%' }
+let s5 = s2 |> Slice.add '%'                      // { 'a'; '%' }
 ```
 
 Here, `s1`, `s2`, and `s3` reference to the same memory address.  
