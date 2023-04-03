@@ -10,10 +10,26 @@ module insertAt =
     [<Fact>]
     let 正常 () = testing {
         let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
-        let! index = 16, ArgGen.intRange 0 slice.Length
+        let! index = 16, ArgGen.intRange 0 (slice.Length + 1)
         let! value = 16, ArgGen.asciiChar
         let expected = Seq.insertAt index value slice
         test Slice.insertAt (index, value, slice) ==> Assert.sequentialEqual expected
+    }
+
+    [<Fact>]
+    let 異常_インデックスが大きすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange (slice.Length + 1) 99
+        let! value = 16, ArgGen.asciiChar
+        test Slice.insertAt (index, value, slice) ==> Assert.thrown<ArgumentException>
+    }
+
+    [<Fact>]
+    let 異常_インデックスが小さすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange -99 -1
+        let! value = 16, ArgGen.asciiChar
+        test Slice.insertAt (index, value, slice) ==> Assert.thrown<ArgumentException>
     }
 
 
@@ -21,10 +37,24 @@ module insertSliceAt =
     [<Fact>]
     let 正常 () = testing {
         let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
-        let! index = 16, ArgGen.intRange 0 slice.Length
+        let! index = 16, ArgGen.intRange 0 (slice.Length + 1)
         let! values = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
         let expected = Seq.insertManyAt index values slice
         test Slice.insertSliceAt (index, values, slice) ==> Assert.sequentialEqual expected
+    }
+
+    [<Fact>]
+    let 異常_インデックスが大きすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange (slice.Length + 1) 99
+        test Slice.insertSliceAt (index, Slice.empty, slice) ==> Assert.thrown<ArgumentException>
+    }
+
+    [<Fact>]
+    let 異常_インデックスが小さすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange -99 -1
+        test Slice.insertSliceAt (index, Slice.empty, slice) ==> Assert.thrown<ArgumentException>
     }
 
 
@@ -32,10 +62,24 @@ module insertManyAt =
     [<Fact>]
     let 正常 () = testing {
         let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
-        let! index = 16, ArgGen.intRange 0 slice.Length
+        let! index = 16, ArgGen.intRange 0 (slice.Length + 1)
         let! values = 16, ArgGen.array ArgGen.asciiChar (ArgGen.intRange 1 16)
         let expected = Seq.insertManyAt index values slice
         test Slice.insertManyAt (index, values, slice) ==> Assert.sequentialEqual expected
+    }
+
+    [<Fact>]
+    let 異常_インデックスが大きすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange (slice.Length + 1) 99
+        test Slice.insertManyAt (index, array.Empty(), slice) ==> Assert.thrown<ArgumentException>
+    }
+
+    [<Fact>]
+    let 異常_インデックスが小さすぎる () = testing {
+        let! slice = 16, ArgGen.slice ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! index = 16, ArgGen.intRange -99 -1
+        test Slice.insertManyAt (index, array.Empty(), slice) ==> Assert.thrown<ArgumentException>
     }
 
 

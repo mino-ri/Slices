@@ -331,3 +331,20 @@ module ConsBack3 =
         let! slice = ArgGen.slice ArgGen.int (ArgGen.intRange 0 3)
         test Slice.(|ConsBack3|_|) slice ==> Assert.vnone
     }
+
+
+module wrapArray =
+    [<Fact>]
+    let 一致 () = testing {
+        let! array = ArgGen.array ArgGen.asciiChar (ArgGen.intRange 0 16)
+        test Slice.Unchecked.wrapArray array ==> Assert.sequentialEqual array
+    }
+
+    [<Fact>]
+    let 変更が伝搬する () = testing {
+        let! array = ArgGen.array ArgGen.asciiChar (ArgGen.intRange 1 16)
+        let! newChar = ArgGen.asciiChar
+        let! result = test Slice.Unchecked.wrapArray array
+        array[0] <- newChar
+        Assert.sequentialEqual array result
+    }

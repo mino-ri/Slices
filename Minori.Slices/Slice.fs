@@ -200,7 +200,7 @@ and internal ByteSliceJsonConverter() =
 
 
 /// Provides JsonConverter for slices.
-and SliceJsonConverterFactory() =
+and [<ExcludeFromCodeCoverage>] SliceJsonConverterFactory() =
     inherit JsonConverterFactory()
     let genericType = typedefof<Slice<_>>
     let byteSliceType = typeof<Slice<byte>>

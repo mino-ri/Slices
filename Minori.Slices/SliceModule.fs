@@ -349,7 +349,7 @@ let inline toArray<'T> (slice: 'T slice) = slice.AsSpan().ToArray()
 
 /// Builds a new list from the given slice.
 [<ExcludeFromCodeCoverage>]
-let toList<'T> (slice: 'T slice) = List.init slice.Length (fun i -> slice[i])
+let toList<'T> (slice: 'T slice) = List.ofSeq slice
 
 /// Views the given slice as a sequence.
 [<ExcludeFromCodeCoverage>]
